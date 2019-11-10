@@ -4,12 +4,7 @@ Deepmosaicのバックエンドを担当するコンポーネント
 
 ## 目次
 - [はじめに](https://github.com/LancersDevTeam/spam_api/wiki)
-- [インストール方法](https://github.com/LancersDevTeam/spam_api/wiki/1.3-Install)
-- [インフラ構成](https://github.com/LancersDevTeam/spam_api/wiki/1.4-Infrastructure)
-- [バッチについて](https://github.com/LancersDevTeam/spam_api/wiki/1.5-Batch)
-- [リリース手順](https://github.com/LancersDevTeam/spam_api/wiki/1.6-Release-steps)
-- [サーバへの接続方法](https://github.com/LancersDevTeam/spam_api/wiki/1.7-Connect-to-Server)
-- [テスト方法](https://github.com/LancersDevTeam/spam_api/wiki/1.8-Test)
+
 
 ## API List
 - Connection
@@ -37,7 +32,7 @@ Deepmosaicのバックエンドを担当するコンポーネント
 
 ---
 ## <a name="ping"></a>Ping
-サーバのヘルスチェックを行う。Mysql, Redis, Chatworkとの疎通確認を行う。
+サーバのヘルスチェックを行う
 
 `GET /v1/service/connection/ping`
 
@@ -63,7 +58,7 @@ ping          | string        | `pong` is always returned.
 ---
 
 ## <a name="create_user"></a>Create User
-firebaseでアカウントの作成が完了したときに呼び出すAPI。管理者ユーザを作成する。roleがadminの場合は同時にorganizationも作成する
+firebaseでアカウントの作成が完了したときに呼び出すAPI。管理者ユーザを作成する。roleがadminの場合は同時にorganizationも作成する。organization名は、uuidをベースにシステム側で自動的にIDを割り振る
 
 `POST /v1/service/users`
 
@@ -73,6 +68,7 @@ curl https://api.deepmosaic.jp/v1/service/users \
     -H "Content-Type: application/json" \
     -d '{ 
         "role": "admin",
+        "email": "abc@abc.com",
         "phone_number": "03-1234-5678",
         "company_name": "いろは株式会社"
     }' \
@@ -83,7 +79,10 @@ curl https://api.deepmosaic.jp/v1/service/users \
 
 Parameter name   | Type     | Required | Description
 ---------------- | -------- | -------- | -----------
-message_id       | number   | Yes      | message id
+role             | string   | Yes      | message id
+email            | string   | Yes      | message id
+phone_number     | number   | Yes      | message id
+company_name     | string   | Yes      | message id
 
 ### Response
 正常に処理が完了すれば 200 OK が返る
@@ -104,7 +103,7 @@ curl https://api.deepmosaic.jp/v1/service/users/:id \
     -H "Authorization: Bearer <ACCESS_TOKEN>" \
     -H "Content-Type: application/json" \
     -d '{ 
-        "email": "",
+        "email": "efg@efg.com",
         "phone_number": "03-8765-4321"
         "display_name": "ディープモザイク",
         "photo_url": "",
@@ -139,6 +138,45 @@ Status: 200 OK
 ```
 
 ---
+
+## <a name="list_users"></a>List Users
+ユーザのroleがadminの場合は、organizationに属するユーザ全ての情報を返す
+
+`GET /v1/service/users`
+
+```
+curl https://api.deepmosaic.jp/v1/service/users \
+    -H "Authorization: Bearer <ACCESS_TOKEN>"
+```
+
+### Response
+[Users for management object](#users_for_management_object) are returned.
+
+```
+Status: 200 OK
+
+{
+    "users": [
+        {
+            ...
+        }
+    ]
+}
+```
+
+Field name    | Type          | Description
+------------- | ------------- | ---------------
+user_id       | string        |
+email         | string        | The unique name for this response.
+role          | string        | A URL to re-request this resource.
+created_at    | string        | message_spamsテーブルにおける`feedback_from_admin=0`の全レコード数
+signin_at     | number        |
+video_length  | number        |
+status        | string        | [Users for management object](#users_for_management_object)
+
+---
+
+
 
 ## <a name="create_license"></a>Create License
 stripeのチェックアウト処理が完了したときに呼び出すエンドポイント
