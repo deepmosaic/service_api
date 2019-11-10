@@ -17,6 +17,7 @@ Deepmosaicのバックエンドを担当するコンポーネント
 - Users
   - [Create User](#create_user)
   - [Edit User](#edit_user)
+  - [List Users](#list_users)
   - [Delete User](#delete_user)
 - Licenses
   - [Create License](#create_license)
@@ -105,7 +106,7 @@ curl https://api.deepmosaic.jp/v1/service/users/:id \
     -d '{ 
         "email": "",
         "phone_number": "03-8765-4321"
-        "display_name": "",
+        "display_name": "ディープモザイク",
         "photo_url": "",
         "is_download": 1
     }' \
@@ -116,13 +117,25 @@ curl https://api.deepmosaic.jp/v1/service/users/:id \
 
 Parameter name   | Type     | Required | Description
 ---------------- | -------- | -------- | -----------
-message_id       | number   | Yes      | message id
+email            | string   | No       | email
+phone_number     | string   | No       | phone_number
+display_name     | string   | No       | display_name
+photo_url        | string   | No       | photo_url
+is_download      | number   | No       | is_download
 
 ### Response
-正常に処理が完了すれば 200 OK が返る
+Users object are returned.
 
 ```
 Status: 200 OK
+
+{
+    "id": "886313e1-3b8a-5372-9b90-0c9aee199e5d",
+    "self_link": "https://api2.lancers.jp/v1/spam/messages?page=3&feedback_from_admin=0",
+    "users": {
+        ...
+    }
+}
 ```
 
 ---
@@ -147,7 +160,8 @@ curl https://api.deepmosaic.jp/v1/service/licenses \
 
 Parameter name   | Type     | Required | Description
 ---------------- | -------- | -------- | -----------
-message_id       | number   | Yes      | message id
+length           | number   | Yes      | message id
+price            | number   | Yes      | message id
 
 ### Response
 正常に処理が完了すれば 200 OK が返る
