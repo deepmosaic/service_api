@@ -14,12 +14,22 @@ Deepmosaicのバックエンドを担当するコンポーネント
   - [Edit User](#edit_user)
   - [List Users](#list_users)
   - [Delete User](#delete_user)
-- Licenses
-  - [Create License](#create_license)
-  - [Edit License](#edit_license)
 - Invitations
   - [Create Invitation](#create_invitation)
   - [Edit Invitation](#edit_invitation)
+- Licenses
+  - [Create License](#create_license)
+  - [Edit License](#edit_license)
+- Payments
+  - [List Payments](#list_payments)
+- Projects
+  - [Create Project](#create_project)
+  - [Get Project](#get_project)
+  - [List Projects](#list_projects)
+  - [Edit Project](#edit_project)
+  - [Delete Project](#delete_project)
+- Exports
+  - [Create Export](#create_export)
 - Other
   - [HTTP Status Code](#http_status_code)
   - [Error](#error)
@@ -179,7 +189,8 @@ status        | string        | [Users for management object](#users_for_managem
 
 
 ## <a name="create_license"></a>Create License
-stripeのチェックアウト処理が完了したときに呼び出すエンドポイント
+stripeのチェックアウト処理が完了したときにリダイレクトするエンドポイント。success_urlに指定するエンドポイント
+webhookとしてpostされる
 
 `POST /v1/service/licenses`
 
