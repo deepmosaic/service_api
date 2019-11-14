@@ -1,0 +1,17 @@
+cnx = mysql.connector.connect(**mysql_config)
+cursor = cnx.cursor(dictionary=True)
+
+query = ('''
+    SELECT
+    BIN_TO_UUID(id) as id
+    FROM users
+    where id = UUID_TO_BIN(%s)
+''')
+
+user_id = '20d1a7a0-052f-11ea-8660-d95622a8e37b'
+
+params = (user_id,)
+
+cursor.execute(query, params)
+a = cursor.fetchall()
+print(a[0]['id'])

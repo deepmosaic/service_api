@@ -16,7 +16,11 @@ Deepmosaicのバックエンドを担当するコンポーネント
   - [Delete User](#delete_user)
 - Invitations
   - [Create Invitation](#create_invitation)
-  - [Edit Invitation](#edit_invitation)
+- Organizations
+  - [Edit Organization](#edit_organization)
+- Organization Members
+  - [Edit Organization Member](#edit_organization_member)
+  - [Delete Organization Member](#delete_organization_member)
 - Licenses
   - [Create License](#create_license)
   - [Edit License](#edit_license)
@@ -68,7 +72,7 @@ ping          | string        | `pong` is always returned.
 ---
 
 ## <a name="create_user"></a>Create User
-firebaseでアカウントの作成が完了したときに呼び出すAPI。管理者ユーザを作成する。roleがadminの場合は同時にorganizationも作成する。organization名は、uuidをベースにシステム側で自動的にIDを割り振る
+firebaseでアカウントの作成が完了したときに呼び出すAPI。roleがadminの場合は同時にorganizationも作成する。organization名は、uuidをベースにシステム側で自動的にIDを割り振る。organization_membersにもレコードを作成する
 
 `POST /v1/service/users`
 
@@ -78,9 +82,9 @@ curl https://api.deepmosaic.jp/v1/service/users \
     -H "Content-Type: application/json" \
     -d '{ 
         "role": "admin",
-        "email": "abc@abc.com",
-        "phone_number": "03-1234-5678",
-        "company_name": "いろは株式会社"
+        "company_name": "いろは株式会社",
+        "postal_code": "123-4567",
+        "address": "東京都港区白銀高輪1-1-1 パークレジデンス1201"
     }' \
     -X POST
 ```
@@ -89,16 +93,22 @@ curl https://api.deepmosaic.jp/v1/service/users \
 
 Parameter name   | Type     | Required | Description
 ---------------- | -------- | -------- | -----------
-role             | string   | Yes      | message id
-email            | string   | Yes      | message id
-phone_number     | number   | Yes      | message id
-company_name     | string   | Yes      | message id
+role             | string   | Yes      | for organization_members table ユーザ権限
+company_name     | string   | Yes      | for organizations table
+postal_code      | string   | Yes      | for organizations table
+address          | string   | Yes      | for organizations table
 
 ### Response
-正常に処理が完了すれば 200 OK が返る
+[Users object](#users_object) is returned.
 
 ```
 Status: 200 OK
+
+{
+    "user": {
+        ...
+    }
+}
 ```
 
 ---
@@ -113,11 +123,7 @@ curl https://api.deepmosaic.jp/v1/service/users/:id \
     -H "Authorization: Bearer <ACCESS_TOKEN>" \
     -H "Content-Type: application/json" \
     -d '{ 
-        "email": "efg@efg.com",
-        "phone_number": "03-8765-4321"
-        "display_name": "ディープモザイク",
-        "photo_url": "",
-        "is_download": 1
+        "is_app_download": 1
     }' \
     -X PUT
 ```
@@ -126,22 +132,16 @@ curl https://api.deepmosaic.jp/v1/service/users/:id \
 
 Parameter name   | Type     | Required | Description
 ---------------- | -------- | -------- | -----------
-email            | string   | No       | email
-phone_number     | string   | No       | phone_number
-display_name     | string   | No       | display_name
-photo_url        | string   | No       | photo_url
-is_download      | number   | No       | is_download
+is_app_download  | number   | No       | is_app_download
 
 ### Response
-Users object are returned.
+[Users object](#users_object) is returned.
 
 ```
 Status: 200 OK
 
 {
-    "id": "886313e1-3b8a-5372-9b90-0c9aee199e5d",
-    "self_link": "https://api2.lancers.jp/v1/spam/messages?page=3&feedback_from_admin=0",
-    "users": {
+    "user": {
         ...
     }
 }
@@ -160,7 +160,7 @@ curl https://api.deepmosaic.jp/v1/service/users \
 ```
 
 ### Response
-[Users for management object](#users_for_management_object) are returned.
+[Users objects](#users_object) are returned.
 
 ```
 Status: 200 OK
@@ -169,24 +169,99 @@ Status: 200 OK
     "users": [
         {
             ...
-        }
+        },
+        {
+            ...
+        },
+        ...
     ]
 }
 ```
 
-Field name    | Type          | Description
-------------- | ------------- | ---------------
-user_id       | string        |
-email         | string        | The unique name for this response.
-role          | string        | A URL to re-request this resource.
-created_at    | string        | message_spamsテーブルにおける`feedback_from_admin=0`の全レコード数
-signin_at     | number        |
-video_length  | number        |
-status        | string        | [Users for management object](#users_for_management_object)
+---
+
+## <a name="create_user"></a>Create User
+firebaseでアカウントの作成が完了したときに呼び出すAPI。roleがadminの場合は同時にorganizationも作成する。organization名は、uuidをベースにシステム側で自動的にIDを割り振る。organization_membersにもレコードを作成する
+
+`POST /v1/service/users`
+
+```
+curl https://api.deepmosaic.jp/v1/service/users \
+    -H "Authorization: Bearer <ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{ 
+        "role": "admin",
+        "company_name": "いろは株式会社",
+        "postal_code": "123-4567",
+        "address": "東京都港区白銀高輪1-1-1 パークレジデンス1201"
+    }' \
+    -X POST
+```
+
+### Body params
+
+Parameter name   | Type     | Required | Description
+---------------- | -------- | -------- | -----------
+role             | string   | Yes      | for organization_members table ユーザ権限
+company_name     | string   | Yes      | for organizations table
+postal_code      | string   | Yes      | for organizations table
+address          | string   | Yes      | for organizations table
+
+### Response
+[Users object](#users_object) is returned.
+
+```
+Status: 200 OK
+
+{
+    "user": {
+        ...
+    }
+}
+```
 
 ---
 
+## <a name="create_invitation"></a>Create Invitation
+ユーザを招待し、招待メールを送信する。
 
+`POSTT /v1/service/invitations`
+
+```
+curl https://api.deepmosaic.jp/v1/service/invitations \
+    -H "Authorization: Bearer <ACCESS_TOKEN>" \
+    -H "Content-Type: application/json" \
+    -d '{ 
+        "email": "deep@mosaic.com",
+        "role": "member"
+        "organization_id": "20d1a7a0-052f-11ea-8660-d95622a8e37b"
+    }' \
+    -X POST
+```
+
+### Body params
+
+Parameter name   | Type     | Required | Description
+---------------- | -------- | -------- | -----------
+email            | string   | Yes      | is_app_download
+role             | string   | Yes      | is_app_download
+organization_id  | string   | Yes      | is_app_download
+
+### Response
+
+[Users object](#users_object) is returned.
+
+```
+Status: 200 OK
+
+{
+    "user": {
+        ...
+    }
+}
+```
+
+---
 
 ## <a name="create_license"></a>Create License
 stripeのチェックアウト処理が完了したときにリダイレクトするエンドポイント。success_urlに指定するエンドポイント
@@ -547,19 +622,19 @@ create index feedback_from_admin_index on spam_publics(feedback_from_admin);
 create index feedback_from_user_index on spam_publics(feedback_from_user);
 ```
 
-## <a name="message_spams_object"></a>Message spams object
+## <a name="users_object"></a>Users object
 ```
 {
-    "4321": {
-        "id": 5647,
-        "created": "2017-12-19 14:00:00",
-        "board_id": 8765,
-        "message_id": 4321,
-        "description": "突然のメッセージ失礼します。ネット関連の仕事をしていて...安田",
-        "send_user_id": 1234,
-        "send_user_nickname": 'yasuda',
-        "spam": 2
-    }
+    "id": "20d1a7a0-052f-11ea-8660-d95622a8e37b",
+    "created_at": "2019-12-19 14:00:00",
+    "organization_id": "21391a52-052f-11ea-8660-d95622a8e37b",
+    "company_name": "いろは株式会社",
+    "postal_code": "142-0003",
+    "role": "member",
+    "last_signin_at": "2019-12-19 14:00:00",
+    "is_app_download": 1,
+    "is_signup": 0,
+    "video_length": 360
 }
 ```
 
@@ -574,7 +649,7 @@ message_id            | number    | message id
 description           | string    | messageの本文
 send_user_id          | number    | messageを送ったユーザのid
 send_user_nickname    | number    | messageを送ったユーザのnickname
-spam                  | number    | messageのspamに関する状態。`spam: 0` spamではない。`spam: 1` spamだが管理者によるチェックは未実施。`spam: 2` 管理者によるチェックによってspamであると判断されたメッセージ。
+video_length          | number    | ユーザが検出したビデオの総時間
 
 ## <a name="message_spams_object_admin"></a>Message spams object for admin
 管理画面からmessage_spamsオブジェクトを編集した時のレスポンスデータ用
